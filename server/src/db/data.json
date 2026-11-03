@@ -1,0 +1,113 @@
+{
+    "settings": {
+        "storeName": "Toko Vuebee",
+        "tagline": "",
+        "phone": "",
+        "address": "",
+        "currency": "Rp",
+        "activeWhatsApp": true
+    },
+    "admin": {
+        "id": "Admin-1",
+        "name": " owner toko Vuebee",
+        "email":"admin@katalogwa.com",
+        "password":""
+    },
+    "categories": [
+        {
+            "id":"cat-1",
+            "name": "Makeup",
+            "slug": "makeup"
+        },
+        {
+            "id":"cat-2",
+            "name":"Skincare",
+            "slug":"skincare"
+        }
+    
+    ],
+    "products": [
+    {
+      "id": "prod-1",
+      "name": "Vuebee Velvet Matte Lip Cream",
+      "categoryId": "cat-1",
+      "price": 59000,
+      "stockStatus": "Tersedia",
+      "description": "Lip cream dengan tekstur lembut dan hasil akhir velvet matte. Memberikan warna intens pada bibir dengan tampilan elegan dan nyaman digunakan sehari-hari.",
+      "image": ""
+    },
+    {
+      "id": "prod-2",
+      "name": "Vuebee Flawless Matte Foundation",
+      "categoryId": "cat-1",
+      "price": 89000,
+      "stockStatus": "Tersedia",
+      "description": "Foundation dengan coverage yang dapat disesuaikan untuk membantu menyamarkan noda dan meratakan warna kulit. Memberikan hasil akhir matte natural.",
+      "image": ""
+    },
+    {
+      "id": "prod-3",
+      "name": "Vuebee Blush Pop Cream",
+      "categoryId": "cat-1",
+      "price": 45000,
+      "stockStatus": "Tersedia",
+      "description": "Cream blush dengan tekstur ringan dan mudah dibaurkan. Memberikan rona segar alami pada pipi dengan pilihan warna yang cantik.",
+      "image": ""
+    },
+    {
+      "id": "prod-4",
+      "name": "Vuebee Glow Perfect Cushion",
+      "categoryId": "cat-1",
+      "price": 99000,
+      "stockStatus": "Tersedia",
+      "description": "Cushion dengan tekstur ringan dan coverage merata. Membantu memberikan tampilan kulit yang halus, fresh, dan glowing sepanjang hari.",
+      "image": ""
+    },
+    {
+      "id": "prod-5",
+      "name": "Vuebee Dreamy Eyeshadow Palette",
+      "categoryId": "cat-1",
+      "price": 75000,
+      "stockStatus": "Habis",
+      "description": "Palet eyeshadow dengan perpaduan warna natural dan shimmer yang mudah diaplikasikan. Cocok untuk makeup sehari-hari maupun tampilan glamor.",
+      "image": ""
+    },
+    {
+      "id": "prod-6",
+      "name": "Vuebee Precision Brow Pencil",
+      "categoryId": "cat-1",
+      "price": 39000,
+      "stockStatus": "Tersedia",
+      "description": "Pensil alis dengan ujung presisi untuk membentuk dan mengisi alis. Menghasilkan tampilan alis yang rapi, natural, dan tahan lama.",
+      "image": ""
+    },
+    {
+      "id": "prod-7",
+      "name": "Vuebee Hydra Glow Moisturizer",
+      "categoryId": "cat-2",
+      "price": 85000,
+      "stockStatus": "Tersedia",
+      "description": "Pelembap wajah dengan tekstur gel ringan yang membantu menjaga kelembapan kulit, membuat kulit terasa lembut, segar, dan tampak bercahaya.",
+      "image": ""
+    },
+    {
+      "id": "prod-8",
+      "name": "Vuebee Gentle Facial Cleanser",
+      "categoryId": "cat-2",
+      "price": 55000,
+      "stockStatus": "Tersedia",
+      "description": "Facial wash dengan formula lembut untuk membantu membersihkan kotoran, debu, dan minyak berlebih tanpa membuat kulit terasa tertarik.",
+      "image": ""
+    },
+    {
+      "id": "prod-9",
+      "name": "Vuebee Daily Sun Protection SPF 50",
+      "categoryId": "cat-2",
+      "price": 69000,
+      "stockStatus": "Habis",
+      "description": "Sunscreen dengan tekstur ringan untuk membantu melindungi kulit dari paparan sinar UVA dan UVB. Nyaman digunakan sebagai bagian dari rutinitas harian.",
+      "image": ""
+    }
+        
+    ]
+}
