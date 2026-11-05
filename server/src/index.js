@@ -34,23 +34,25 @@ app.use("/uploads", express.static(uploadPath));
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/store", storeRoutes);
 app.use("/api/stores", storeRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
-    app: "KatalogSepatuSuper API",
+    app: "KatalogVuebee API",
     timestamp: new Date().toISOString(),
   });
 });
 
 app.get("/", (req, res) => {
   res.json({
-    message: "Welcome to KatalogSepatuSuper API",
+    message: "Welcome to KatalogVuebee API",
     endpoints: {
       auth: "/api/auth",
       categories: "/api/categories",
       products: "/api/products",
+      store: "/api/store",
       stores: "/api/stores",
       health: "/api/health",
     },
