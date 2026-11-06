@@ -33,16 +33,21 @@ import {
 } from 'lucide-react';
 
 import { VubeeLogo } from './components/VubeeLogo';
+import {
+  INITIAL_CATEGORIES,
+  INITIAL_PRODUCTS,
+  INITIAL_STORE_SETTINGS
+} from './data/initialProducts';
 
 export function App() {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [storeSettings, setStoreSettings] = useState(null);
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [storeSettings, setStoreSettings] = useState(INITIAL_STORE_SETTINGS);
   const [activeCategoryId, setActiveCategoryId] = useState('');
   const [search, setSearch] = useState('');
 
-  // Navigation View: 'landing' | 'catalog'
-  const [activeView, setActiveView] = useState('landing');
+  // Navigation View: 'catalog' | 'landing'
+  const [activeView, setActiveView] = useState('catalog');
 
   // Modals
   const [selectedProductForDetail, setSelectedProductForDetail] = useState(null);
@@ -52,22 +57,27 @@ export function App() {
   const [isAdminView, setAdminView] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const loadData = async () => {
     try {
-      setIsLoading(true);
-      const [proRes, catRes, storeRes] = await Promise.all([
+      const [proRes, catRes, storeRes] = await Promise.allSettled([
         fetchProducts(),
         fetchCategories(),
         fetchStoreSettings()
       ]);
 
-      if (proRes?.data) setProducts(proRes.data);
-      if (catRes?.data) setCategories(catRes.data);
-      if (storeRes?.data) setStoreSettings(storeRes.data);
+      if (proRes.status === 'fulfilled' && proRes.value?.data?.length > 0) {
+        setProducts(proRes.value.data);
+      }
+      if (catRes.status === 'fulfilled' && catRes.value?.data?.length > 0) {
+        setCategories(catRes.value.data);
+      }
+      if (storeRes.status === 'fulfilled' && storeRes.value?.data) {
+        setStoreSettings(storeRes.value.data);
+      }
     } catch (err) {
-      console.error('Gagal mengambil data katalog:', err);
+      console.warn('API backend belum terhubung, menggunakan data katalog Vuebee:', err);
     } finally {
       setIsLoading(false);
     }
@@ -105,18 +115,26 @@ export function App() {
     }
   };
 
-  const filteredProducts = products.filter((p) => {
-    const matchesCat = !activeCategoryId || p.categoryId === activeCategoryId;
-    const matchesSearch =
-      !search ||
-      p.name?.toLowerCase().includes(search.toLowerCase()) ||
-      (p.description &&
-        p.description.toLowerCase().includes(search.toLowerCase())) ||
-      (p.categoryName &&
-        p.categoryName.toLowerCase().includes(search.toLowerCase()));
+  const filteredProducts = products
+    .map((p) => {
+      if (!p.categoryName && p.categoryId) {
+        const cat = categories.find((c) => c.id === p.categoryId);
+        return cat ? { ...p, categoryName: cat.name } : p;
+      }
+      return p;
+    })
+    .filter((p) => {
+      const matchesCat = !activeCategoryId || p.categoryId === activeCategoryId;
+      const matchesSearch =
+        !search ||
+        p.name?.toLowerCase().includes(search.toLowerCase()) ||
+        (p.description &&
+          p.description.toLowerCase().includes(search.toLowerCase())) ||
+        (p.categoryName &&
+          p.categoryName.toLowerCase().includes(search.toLowerCase()));
 
-    return matchesCat && matchesSearch;
-  });
+      return matchesCat && matchesSearch;
+    });
 
   return (
     <div className="app-layout">

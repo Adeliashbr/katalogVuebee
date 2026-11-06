@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, MessageCircle, CheckCircle2, XCircle, Sparkles, ShieldCheck, Heart, Droplets } from 'lucide-react';
 
 export const ProductDetailModal = ({
@@ -11,6 +11,14 @@ export const ProductDetailModal = ({
     const [selectedImage, setSelectedImage] = useState(product?.image || '');
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('desc'); // 'desc' | 'usage' | 'benefits'
+
+    useEffect(() => {
+        if (product) {
+            setSelectedImage(product.image || '');
+            setQuantity(1);
+            setActiveTab('desc');
+        }
+    }, [product]);
 
     if (!product) return null;
 

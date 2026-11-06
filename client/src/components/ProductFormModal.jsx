@@ -4,10 +4,13 @@ import { X, Upload, Image as ImageIcon, Save, AlertCircle } from 'lucide-react';
 const PRESET_SKINCARE_IMAGES = [
     { label: 'Velvet Lip Cream', url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=800&q=80' },
     { label: 'Matte Foundation', url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Hydra Moisturizer', url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=800&q=80' },
+    { label: 'Blush Pop Cream', url: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&w=800&q=80' },
+    { label: 'Glow Cushion', url: 'https://images.unsplash.com/photo-1631730486784-5456119f69ae?auto=format&fit=crop&w=800&q=80' },
+    { label: 'Eyeshadow Palette', url: 'https://images.unsplash.com/photo-1583241800698-e8ab01830a07?auto=format&fit=crop&w=800&q=80' },
+    { label: 'Precision Brow Pencil', url: 'https://images.unsplash.com/photo-1625093742435-6fa192b6fb10?auto=format&fit=crop&w=800&q=80' },
+    { label: 'Hydra Glow Moisturizer', url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=800&q=80' },
     { label: 'Gentle Cleanser', url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Daily Sunscreen', url: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Eyebrow Pencil', url: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80' }
+    { label: 'Daily Sun Protection', url: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=800&q=80' }
 ];
 
 export const ProductFormModal = ({ isOpen, onClose, onSave, editingProduct, categories }) => {
