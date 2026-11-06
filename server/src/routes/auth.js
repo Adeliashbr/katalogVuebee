@@ -63,4 +63,22 @@ router.post("/login", (req, res) => {
   });
 });
 
+router.get("/me", authenticateToken, (req, res) => {
+  const admin = db.getAdmin();
+  if (!admin || admin.id !== req.user.id) {
+    return res.status(401).json({
+      success: false,
+      message: "Admin tidak ditemukan",
+    });
+  }
+  return res.json({
+    success: true,
+    user: {
+      id: admin.id,
+      name: admin.name,
+      email: admin.email,
+    },
+  });
+});
+
 export default router;

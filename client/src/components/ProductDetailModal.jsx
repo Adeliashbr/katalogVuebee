@@ -4,21 +4,29 @@ import { X, MessageCircle, CheckCircle2, XCircle, Sparkles, ShieldCheck, Heart, 
 export const ProductDetailModal = ({
     product,
     allProducts = [],
-    storeSettings,
     onClose,
     onOrderProduct
 }) => {
-    const [selectedImage, setSelectedImage] = useState(product?.image || '');
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('desc'); // 'desc' | 'usage' | 'benefits'
 
     useEffect(() => {
         if (product) {
-            setSelectedImage(product.image || '');
             setQuantity(1);
             setActiveTab('desc');
         }
     }, [product]);
+
+    useEffect(() => {
+        if (!product) return undefined;
+        const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+        document.addEventListener('keydown', onKey);
+        document.body.classList.add('modal-open-locked');
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.body.classList.remove('modal-open-locked');
+        };
+    }, [product, onClose]);
 
     if (!product) return null;
 
@@ -33,14 +41,7 @@ export const ProductDetailModal = ({
     };
 
     const defaultImage = 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80';
-    const mainImgSrc = selectedImage || product.image || defaultImage;
-
-    // Gallery angles/thumbnails
-    const galleryImages = [
-        product.image || defaultImage,
-        'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=400&q=80',
-        'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=400&q=80'
-    ];
+    const mainImgSrc = product.image || defaultImage;
 
     // Related products (same category or others)
     const relatedProducts = allProducts
@@ -73,7 +74,7 @@ export const ProductDetailModal = ({
                 {/* Body */}
                 <div className="modal-inner-body">
                     <div className="product-detail-layout">
-                        {/* Column 1: Gallery */}
+                        {/* Column 1: Gallery — satu foto utama saja */}
                         <div className="detail-gallery-col">
                             <div className="detail-main-image-box">
                                 <img
@@ -85,19 +86,6 @@ export const ProductDetailModal = ({
                                         e.target.src = defaultImage;
                                     }}
                                 />
-                            </div>
-
-                            <div className="detail-thumbs-strip">
-                                {galleryImages.map((imgUrl, idx) => (
-                                    <button
-                                        type="button"
-                                        key={idx}
-                                        className={`detail-thumb-btn ${mainImgSrc === imgUrl ? 'active' : ''}`}
-                                        onClick={() => setSelectedImage(imgUrl)}
-                                    >
-                                        <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="detail-thumb-img" />
-                                    </button>
-                                ))}
                             </div>
                         </div>
 
@@ -237,7 +225,6 @@ export const ProductDetailModal = ({
                                         key={rel.id}
                                         className="mini-rec-card"
                                         onClick={() => {
-                                            setSelectedImage(rel.image || '');
                                             setQuantity(1);
                                             onOrderProduct(rel, 1, false); // opens new product detail
                                         }}

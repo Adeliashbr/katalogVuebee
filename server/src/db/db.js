@@ -71,20 +71,47 @@ class SqliteDatabase {
   }
 
   seedInitialData() {
+    // Hapus data lama yang tidak relevan dan isi ulang dengan katalog baru.
+    // Versi seed: jika bukan versi terbaru, bersihkan produk & kategori lama.
+    const SEED_VERSION = "v2-relevant-2026";
+    const seedRow = this.db
+      .prepare("SELECT value FROM settings WHERE key = 'seedVersion' LIMIT 1")
+      .get();
+    if (!seedRow || seedRow.value !== SEED_VERSION) {
+      this.db.exec("DELETE FROM products;");
+      this.db.exec("DELETE FROM categories;");
+      this.db
+        .prepare(
+          "INSERT INTO settings (key, value) VALUES ('seedVersion', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        )
+        .run(SEED_VERSION);
+    }
+
     // Seed Settings
     const existingSettings = this.db
       .prepare("SELECT COUNT(*) AS count FROM settings")
       .get();
-    if (existingSettings.count === 0) {
+    if (existingSettings.count <= 1) {
       const insertSetting = this.db.prepare(
-        "INSERT INTO settings (key, value) VALUES (?, ?)",
+        "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
       );
       insertSetting.run("storeName", "Toko Vuebee");
-      insertSetting.run("tagline", "");
-      insertSetting.run("phone", "");
-      insertSetting.run("address", "");
+      insertSetting.run("tagline", "Minimalist Luxury Skincare & Makeup");
+      insertSetting.run("phone", "6282298656732");
+      insertSetting.run("address", "Jakarta Selatan, Indonesia");
       insertSetting.run("currency", "Rp");
     }
+
+    // Perbaiki setting lama yang masih kosong agar katalog tidak kosong
+    this.db
+      .prepare("UPDATE settings SET value = ? WHERE key = 'tagline' AND (value = '' OR value IS NULL)")
+      .run("Minimalist Luxury Skincare & Makeup");
+    this.db
+      .prepare("UPDATE settings SET value = ? WHERE key = 'phone' AND (value = '' OR value IS NULL)")
+      .run("6282298656732");
+    this.db
+      .prepare("UPDATE settings SET value = ? WHERE key = 'address' AND (value = '' OR value IS NULL)")
+      .run("Jakarta Selatan, Indonesia");
 
     // Seed Admin
     const existingAdmin = this.db
@@ -98,7 +125,7 @@ class SqliteDatabase {
         )
         .run(
           "admin-1",
-          "Owner Toko Berkah",
+          "Administrator Vuebee",
           "admin@katalogwa.com",
           hashedPassword,
         );
@@ -116,7 +143,7 @@ class SqliteDatabase {
       insertCat.run("cat-2", "Skincare", "skincare");
     }
 
-    // Seed Products
+    // Seed Products — data relevan makeup & skincare dengan foto Unsplash
     const existingProducts = this.db
       .prepare("SELECT COUNT(*) AS count FROM products")
       .get();
@@ -134,9 +161,9 @@ class SqliteDatabase {
           price: 59000,
           stockStatus: "Tersedia",
           description:
-            "Lip cream dengan tekstur lembut dan hasil akhir velvet matte. Memberikan warna intens pada bibir dengan tampilan elegan dan nyaman digunakan sehari-hari.",
+            "Lip cream dengan hasil akhir velvet matte — warna intens, ringan di bibir, dan tidak cepat kering. Pilihan shade natural sampai bold untuk harian maupun acara.",
           image:
-            "",
+            "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=800&q=80",
         },
         {
           id: "prod-2",
@@ -145,9 +172,9 @@ class SqliteDatabase {
           price: 89000,
           stockStatus: "Tersedia",
           description:
-            "Foundation dengan coverage yang dapat disesuaikan untuk membantu menyamarkan noda dan meratakan warna kulit. Memberikan hasil akhir matte natural.",
+            "Foundation medium hingga full coverage untuk meratakan warna kulit dan menyamarkan noda. Hasil akhir matte natural yang awet hingga 12 jam.",
           image:
-            "",
+            "https://images.unsplash.com/photo-1631730486784-5456119f69ae?auto=format&fit=crop&w=800&q=80",
         },
         {
           id: "prod-3",
@@ -156,86 +183,108 @@ class SqliteDatabase {
           price: 45000,
           stockStatus: "Tersedia",
           description:
-            "Cream blush dengan tekstur ringan dan mudah dibaurkan. Memberikan rona segar alami pada pipi dengan pilihan warna yang cantik.",
+            "Cream blush dengan tekstur lembut dan mudah dibaurkan di pipi, hidung, maupun kelopak mata. Memberi rona segar yang terlihat natural.",
           image:
-            "",
+            "https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&w=800&q=80",
         },
         {
           id: "prod-4",
-          name: "Vuebee Glow Perfect Cushion",
+          name: "Vuebee Glow Perfect Cushion SPF 40",
           categoryId: "cat-1",
           price: 99000,
           stockStatus: "Tersedia",
           description:
-            "Cushion dengan tekstur ringan dan coverage merata. Membantu memberikan tampilan kulit yang halus, fresh, dan glowing sepanjang hari.",
+            "Cushion foundation dengan SPF 40 dan hasil dewy glow. Coverage ringan hingga sedang, mudah diaplikasikan ulang, dan cocok untuk kulit kering hingga normal.",
           image:
-            "",
+            "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
         },
         {
           id: "prod-5",
           name: "Vuebee Dreamy Eyeshadow Palette",
           categoryId: "cat-1",
           price: 75000,
-          stockStatus: "Habis",
+          stockStatus: "Tersedia",
           description:
-            "Palet eyeshadow dengan perpaduan warna natural dan shimmer yang mudah diaplikasikan. Cocok untuk makeup sehari-hari maupun tampilan glamor.",
+            "Palet eyeshadow 12 warna: matte, satin, dan shimmer dalam nuansa cokelat-mocha. Pigmentasi halus, aman untuk makeup harian hingga glamor.",
           image:
-            "",
+            "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=800&q=80",
         },
         {
           id: "prod-6",
-          name: "Vuebee Precision Brow Pencil",
+          name: "Vuebee Lash & Line Mascara",
           categoryId: "cat-1",
-          price: 39000,
-          stockStatus: "Tersedia",
+          price: 65000,
+          stockStatus: "Habis",
           description:
-            "Pensil alis dengan ujung presisi untuk membentuk dan mengisi alis. Menghasilkan tampilan alis yang rapi, natural, dan tahan lama.",
+            "Mascara sekaligus eyeliner cair dengan aplikator presisi untuk bulu mata lentik dan garis mata tajam. Tahan air dan tidak menggumpal.",
           image:
-            "",
+            "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=800&q=80",
         },
         {
           id: "prod-7",
+          name: "Vuebee Niacinamide Bright Serum",
+          categoryId: "cat-2",
+          price: 119000,
+          stockStatus: "Tersedia",
+          description:
+            "Serum niacinamide 10% dengan zinc untuk membantu mencerahkan, menyamarkan pori, dan mengontrol minyak. Tekstur watery, cepat meresap tanpa lengket.",
+          image:
+            "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "prod-8",
           name: "Vuebee Hydra Glow Moisturizer",
           categoryId: "cat-2",
           price: 85000,
           stockStatus: "Tersedia",
           description:
-            "Pelembap wajah dengan tekstur gel ringan yang membantu menjaga kelembapan kulit, membuat kulit terasa lembut, segar, dan tampak bercahaya.",
+            "Pelembap gel-cream dengan hyaluronic acid dan ceramide untuk hidrasi 72 jam. Kulit terasa kenyal, lembut, dan sehat bercahaya tanpa berminyak.",
           image:
-            "",
+            "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=800&q=80",
         },
         {
-          id: "prod-8",
+          id: "prod-9",
           name: "Vuebee Gentle Facial Cleanser",
           categoryId: "cat-2",
           price: 55000,
           stockStatus: "Tersedia",
           description:
-            "Facial wash dengan formula lembut untuk membantu membersihkan kotoran, debu, dan minyak berlebih tanpa membuat kulit terasa tertarik.",
+            "Pembersih wajah pH balance dengan amino surfactant. Membersihkan debu, minyak, dan sisa makeup tanpa membuat kulit ketarik. Aman untuk kulit sensitif.",
           image:
-            "",
+            "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80",
         },
         {
-          id: "prod-9",
-          name: "Vuebee Daily Sun Protection SPF 50",
+          id: "prod-10",
+          name: "Vuebee Daily Sunscreen SPF 50 PA++++",
           categoryId: "cat-2",
           price: 69000,
+          stockStatus: "Tersedia",
+          description:
+            "Sunscreen tekstur gel ringan, no white cast, dengan SPF 50 PA++++. Nyaman di bawah makeup dan tidak perih di mata. Wajib untuk pemakaian harian.",
+          image:
+            "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "prod-11",
+          name: "Vuebee Rose Hydra Toner Mist",
+          categoryId: "cat-2",
+          price: 48000,
+          stockStatus: "Tersedia",
+          description:
+            "Toner mist mawar dan panthenol untuk menyegarkan sekaligus melembapkan kulit. Bisa dipakai sebelum serum atau untuk touch-up makeup di siang hari.",
+          image:
+            "https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "prod-12",
+          name: "Vuebee Clay Detox Mask",
+          categoryId: "cat-2",
+          price: 62000,
           stockStatus: "Habis",
           description:
-            "Sunscreen dengan tekstur ringan untuk membantu melindungi kulit dari paparan sinar UVA dan UVB. Nyaman digunakan sebagai bagian dari rutinitas harian.",
+            "Clay mask dengan kaolin dan salicylic acid untuk deep cleanse pori dan mengurangi komedo. Gunakan 2–3 kali seminggu untuk kulit lebih jernih.",
           image:
-            "",
-        },
-      ];
-
-      const initialCategories = [
-        {
-          id: "cat-1",
-          name: "Makeup",
-        },
-        {
-          id: "cat-2",
-          name: "Skincare",
+            "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=800&q=80",
         },
       ];
 

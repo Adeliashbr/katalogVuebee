@@ -28,14 +28,15 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  filefilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp|gif/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype);
-    if (ext && mime) {
+  fileFilter: (req, file, cb) => {
+    const allowedExt = /\.(jpeg|jpg|png|webp|gif)$/i;
+    const allowedMime = /^image\/(jpeg|jpg|png|webp|gif)$/i;
+    const extOk = allowedExt.test(path.extname(file.originalname).toLowerCase());
+    const mimeOk = allowedMime.test(file.mimetype);
+    if (extOk && mimeOk) {
       return cb(null, true);
     }
-    cb(new Error("format file tidak didukung! Hanya Gambar JPEG,PNG,WEBP"));
+    cb(new Error("format file tidak didukung! Hanya Gambar JPEG,PNG,WEBP,GIF"));
   },
 });
 
@@ -46,13 +47,14 @@ router.get("/", (req, res) => {
   const products = db.getProducts({ categoryId, search, stockStatus });
 
   res.json({
-    successs: true,
+    success: true,
     count: products.length,
     data: products,
   });
 });
 
 router.get("/:id", (req, res) => {
+  const product = db.getProductById(req.params.id);
   if (!product) {
     return res
       .status(404)
@@ -75,7 +77,7 @@ router.post("/", authenticateToken, upload.single("photo"), (req, res) => {
       .status(400)
       .json({ success: false, message: "kategori produk wajib diisi" });
   }
-  if (!price || isNaN(price) || Number(price) < 0) {
+  if (price === undefined || price === '' || isNaN(price) || Number(price) < 0) {
     return res
       .status(400)
       .json({ success: false, message: "harga produk harus angka positif" });
@@ -83,7 +85,7 @@ router.post("/", authenticateToken, upload.single("photo"), (req, res) => {
 
   let finalImage = imageUrl;
   if (req.file) {
-    finalImage = `uploads/product ${req.file.filename}`;
+    finalImage = `/uploads/${req.file.filename}`;
   }
 
   const newProduct = db.addProduct({
@@ -114,6 +116,15 @@ router.put("/:id", authenticateToken, upload.single("photo"), (req, res) => {
       .json({ success: false, message: "produk tidak ditemukan" });
   }
 
+  if (
+    price !== undefined &&
+    (price === '' || isNaN(price) || Number(price) < 0)
+  ) {
+    return res
+      .status(400)
+      .json({ success: false, message: "harga produk harus angka positif" });
+  }
+
   const updatePayload = {};
   if (name !== undefined) updatePayload.name = name.trim();
   if (categoryId !== undefined) updatePayload.categoryId = categoryId.trim();
@@ -122,7 +133,7 @@ router.put("/:id", authenticateToken, upload.single("photo"), (req, res) => {
   if (description !== undefined) updatePayload.description = description.trim();
 
   if (req.file) {
-    updatePayload.image = `uploads/product/${req.file.filename}`;
+    updatePayload.image = `/uploads/${req.file.filename}`;
   } else if (imageUrl !== undefined && imageUrl.trim()) {
     updatePayload.image = imageUrl.trim();
   }
@@ -165,6 +176,27 @@ router.delete("/:id", authenticateToken, (req, res) => {
   res.json({
     success: true,
     message: "produk berhasil dihapus",
+  });
+});
+
+// Tangkap error multer (file terlalu besar / format tidak didukung)
+// agar client menerima JSON, bukan halaman HTML error.
+router.use((err, _req, res, _next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      success: false,
+      message:
+        err.code === "LIMIT_FILE_SIZE"
+          ? "ukuran file terlalu besar! Maksimal 5 MB"
+          : err.message || "upload gagal",
+    });
+  }
+  if (err && err.message && err.message.startsWith("format file")) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+  return res.status(500).json({
+    success: false,
+    message: err?.message || "terjadi kesalahan server",
   });
 });
 

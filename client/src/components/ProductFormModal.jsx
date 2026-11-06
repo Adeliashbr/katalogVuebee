@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Image as ImageIcon, Save, AlertCircle } from 'lucide-react';
 
-const PRESET_SKINCARE_IMAGES = [
-    { label: 'Velvet Lip Cream', url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Matte Foundation', url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Blush Pop Cream', url: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Glow Cushion', url: 'https://images.unsplash.com/photo-1631730486784-5456119f69ae?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Eyeshadow Palette', url: 'https://images.unsplash.com/photo-1583241800698-e8ab01830a07?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Precision Brow Pencil', url: 'https://images.unsplash.com/photo-1625093742435-6fa192b6fb10?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Hydra Glow Moisturizer', url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Gentle Cleanser', url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Daily Sun Protection', url: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=800&q=80' }
-];
-
 export const ProductFormModal = ({ isOpen, onClose, onSave, editingProduct, categories }) => {
     const [name, setName] = useState('');
     const [categoryId, setCategoryId] = useState('');
@@ -24,6 +12,17 @@ export const ProductFormModal = ({ isOpen, onClose, onSave, editingProduct, cate
     const [previewSrc, setPreviewSrc] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen) return undefined;
+        const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+        document.addEventListener('keydown', onKey);
+        document.body.classList.add('modal-open-locked');
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.body.classList.remove('modal-open-locked');
+        };
+    }, [isOpen, onClose]);
 
     useEffect(() => {
         if (editingProduct) {
@@ -41,8 +40,8 @@ export const ProductFormModal = ({ isOpen, onClose, onSave, editingProduct, cate
             setPrice('');
             setStockStatus('Tersedia');
             setDescription('');
-            setImageUrl(PRESET_SKINCARE_IMAGES[0].url);
-            setPreviewSrc(PRESET_SKINCARE_IMAGES[0].url);
+            setImageUrl('');
+            setPreviewSrc('');
             setSelectedFile(null);
         }
         setErrorMsg('');
@@ -54,15 +53,17 @@ export const ProductFormModal = ({ isOpen, onClose, onSave, editingProduct, cate
         const file = e.target.files[0];
         if (file) {
             setSelectedFile(file);
+            setImageUrl('');
             const objectUrl = URL.createObjectURL(file);
             setPreviewSrc(objectUrl);
         }
     };
 
-    const handleSelectPreset = (url) => {
-        setSelectedFile(null);
-        setImageUrl(url);
-        setPreviewSrc(url);
+    const handleImageUrlChange = (value) => {
+        setImageUrl(value);
+        if (!selectedFile) {
+            setPreviewSrc(value);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -196,32 +197,21 @@ export const ProductFormModal = ({ isOpen, onClose, onSave, editingProduct, cate
                                 </div>
                             </div>
 
-                            {/* Preset images */}
+                            {/* URL Gambar */}
                             <div>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', display: 'block', marginBottom: '0.4rem' }}>
-                                    Atau pilih sampel foto skincare cepat:
-                                </span>
-                                <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-                                    {PRESET_SKINCARE_IMAGES.map((preset, idx) => (
-                                        <button
-                                            type="button"
-                                            key={idx}
-                                            onClick={() => handleSelectPreset(preset.url)}
-                                            style={{
-                                                width: '46px',
-                                                height: '46px',
-                                                borderRadius: 'var(--radius-sm)',
-                                                overflow: 'hidden',
-                                                border: previewSrc === preset.url ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
-                                                flexShrink: 0,
-                                                padding: 0
-                                            }}
-                                            title={preset.label}
-                                        >
-                                            <img src={preset.url} alt={preset.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        </button>
-                                    ))}
-                                </div>
+                                <label className="form-label-title" style={{ fontSize: '0.78rem' }}>
+                                    Atau tempel URL gambar (https://...)
+                                </label>
+                                <input
+                                    type="url"
+                                    className="form-input-control"
+                                    placeholder="https://images.unsplash.com/..."
+                                    value={imageUrl}
+                                    onChange={(e) => handleImageUrlChange(e.target.value)}
+                                />
+                                <p style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', marginTop: '0.35rem' }}>
+                                    Gunakan gambar makeup/skincare yang relevan. Jika kosong, produk ditampilkan tanpa foto.
+                                </p>
                             </div>
                         </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { MessageCircle, CheckCircle2, XCircle, Eye } from 'lucide-react';
 
-export const ProductCard = ({ product, onSelectProduct, onViewDetail }) => {
+export const ProductCard = ({ product, onSelectProduct, onViewDetail, index = 0 }) => {
     const isAvailable = product.stockStatus === 'Tersedia';
 
     const formatRupiah = (number) => {
@@ -26,7 +26,8 @@ export const ProductCard = ({ product, onSelectProduct, onViewDetail }) => {
 
     return (
         <div
-            className={`product-luxury-card ${!isAvailable ? 'is-out-of-stock' : ''}`}
+            className={`product-luxury-card card-anim-card ${!isAvailable ? 'is-out-of-stock' : ''}`}
+            style={{ '--card-delay': `${index * 60}ms` }}
             id={`product-${product.id}`}
             onClick={handleCardClick}
             role="button"
@@ -45,6 +46,8 @@ export const ProductCard = ({ product, onSelectProduct, onViewDetail }) => {
                     }}
                 />
 
+                <div className="card-shine" aria-hidden="true" />
+
                 <span className="card-category-tag">
                     {product.categoryName || 'Vuebee'}
                 </span>
@@ -61,6 +64,11 @@ export const ProductCard = ({ product, onSelectProduct, onViewDetail }) => {
                             <span>Habis</span>
                         </>
                     )}
+                </span>
+
+                <span className="card-hover-action" aria-hidden="true">
+                    <Eye size={15} />
+                    <span>Detail Produk</span>
                 </span>
             </div>
 

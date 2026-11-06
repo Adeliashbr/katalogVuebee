@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
-import { X, MessageCircle, AlertCircle, Send, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, MessageCircle, AlertCircle, Send } from 'lucide-react';
 
 export const OrderModal = ({ product, storeSettings, onClose, initialQuantity = 1 }) => {
     const [customerName, setCustomerName] = useState('');
     const [customerNotes, setCustomerNotes] = useState('');
     const [quantity, setQuantity] = useState(initialQuantity || 1);
     const [showError, setShowError] = useState(false);
+
+    useEffect(() => {
+        if (!product) return undefined;
+        const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+        document.addEventListener('keydown', onKey);
+        document.body.classList.add('modal-open-locked');
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.body.classList.remove('modal-open-locked');
+        };
+    }, [product, onClose]);
 
     if (!product) return null;
 

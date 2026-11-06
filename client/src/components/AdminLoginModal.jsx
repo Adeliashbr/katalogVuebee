@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Lock, Mail, AlertCircle, ArrowRight, ShieldCheck, KeyRound } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Lock, Mail, AlertCircle, ArrowRight, KeyRound } from 'lucide-react';
 import { loginAdmin, setAuthToken } from '../services/api';
 import { VubeeLogo } from './VubeeLogo';
 
@@ -8,6 +8,17 @@ export const AdminLoginModal = ({ isOpen, onClose, onSuccess }) => {
     const [password, setPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen) return undefined;
+        const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+        document.addEventListener('keydown', onKey);
+        document.body.classList.add('modal-open-locked');
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.body.classList.remove('modal-open-locked');
+        };
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 

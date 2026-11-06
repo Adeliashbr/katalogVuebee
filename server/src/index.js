@@ -28,7 +28,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const uploadPath = path.join(__dirname, `../uploads`);
+const uploadPath = path.join(__dirname, "uploads");
 app.use("/uploads", express.static(uploadPath));
 
 app.use("/api/auth", authRoutes);
@@ -56,6 +56,24 @@ app.get("/", (req, res) => {
       stores: "/api/stores",
       health: "/api/health",
     },
+  });
+});
+
+// JSON 404 untuk route /api yang tidak dikenal (hindari HTML default).
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "endpoint tidak ditemukan",
+  });
+});
+
+// Error handler JSON global (mis. body JSON tidak valid, error tak terduga).
+// eslint-disable-next-line no-unused-vars
+app.use((err, _req, res, _next) => {
+  const status = err && err.status ? err.status : 500;
+  res.status(status).json({
+    success: false,
+    message: err?.message || "terjadi kesalahan server",
   });
 });
 
