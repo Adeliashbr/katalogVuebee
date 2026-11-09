@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, MessageCircle, CheckCircle2, XCircle, Sparkles, ShieldCheck, Heart, Droplets, PackageCheck, PackageX } from 'lucide-react';
 
 export const ProductDetailModal = ({
@@ -45,21 +46,17 @@ export const ProductDetailModal = ({
     const defaultImage = 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80';
     const mainImgSrc = product.image || defaultImage;
 
-    return (
+    return createPortal(
         <div
             className="modal-overlay-backdrop product-detail-backdrop"
             onClick={onClose}
             style={{
                 position: 'fixed',
                 inset: 0,
-                zIndex: 150,
                 backgroundColor: 'rgba(10, 15, 35, 0.65)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '2.5rem 1rem',
                 overflowY: 'auto'
             }}
         >
@@ -69,8 +66,6 @@ export const ProductDetailModal = ({
                 style={{
                     maxWidth: '820px',
                     width: '100%',
-                    margin: 'auto',
-                    maxHeight: '84vh',
                     borderRadius: '24px',
                     boxShadow: '0 25px 60px -15px rgba(10, 15, 35, 0.4), 0 0 0 1px rgba(197, 168, 128, 0.25)',
                     display: 'flex',
@@ -274,7 +269,8 @@ export const ProductDetailModal = ({
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

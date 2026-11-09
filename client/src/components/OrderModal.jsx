@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, MessageCircle, AlertCircle, Send } from 'lucide-react';
 
 export const OrderModal = ({ product, storeSettings, onClose, initialQuantity = 1 }) => {
@@ -68,15 +69,15 @@ Mohon konfirmasi ketersediaan dan proses pemesanan saya. Terima kasih!`;
 
     const defaultImage = 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80';
 
-    return (
+    return createPortal(
         <div className="modal-overlay-backdrop" onClick={onClose}>
             <div
                 className="modal-luxury-window animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
-                style={{ maxWidth: '540px' }}
+                style={{ maxWidth: '680px' }}
             >
                 {/* Modal Header */}
-                <div className="modal-header-bar">
+                <div className="modal-header-bar" style={{ padding: '1rem 1.25rem' }}>
                     <div className="modal-header-titles">
                         <h2>Konfirmasi Pesanan WhatsApp</h2>
                         <p>Pesan langsung ke WhatsApp Official {storeName}</p>
@@ -94,7 +95,7 @@ Mohon konfirmasi ketersediaan dan proses pemesanan saya. Terima kasih!`;
 
                 {/* Form */}
                 <form onSubmit={handleSubmitOrder}>
-                    <div className="modal-inner-body">
+                    <div className="modal-inner-body" style={{ padding: '1.25rem' }}>
                         {/* Summary Box */}
                         <div className="order-product-summary">
                             <img
@@ -158,39 +159,42 @@ Mohon konfirmasi ketersediaan dan proses pemesanan saya. Terima kasih!`;
                             </div>
                         )}
 
-                        {/* Input Customer Name */}
-                        <div className="form-group-item">
-                            <label className="form-label-title" htmlFor="customer-name-input">
-                                <span>Nama Lengkap Anda</span>
-                                <span style={{ color: 'var(--color-danger)', marginLeft: '0.2rem' }}>*</span>
-                            </label>
-                            <input
-                                id="customer-name-input"
-                                type="text"
-                                className="form-input-control"
-                                placeholder="Contoh: Budi Pratama"
-                                value={customerName}
-                                onChange={(e) => {
-                                    setCustomerName(e.target.value);
-                                    if (e.target.value.trim()) setShowError(false);
-                                }}
-                                autoFocus
-                            />
-                        </div>
+                        {/* Input Nama & Catatan — berdampingan di desktop */}
+                        <div className="order-form-grid">
+                            {/* Input Customer Name */}
+                            <div className="form-group-item" style={{ marginBottom: 0 }}>
+                                <label className="form-label-title" htmlFor="customer-name-input">
+                                    <span>Nama Lengkap Anda</span>
+                                    <span style={{ color: 'var(--color-danger)', marginLeft: '0.2rem' }}>*</span>
+                                </label>
+                                <input
+                                    id="customer-name-input"
+                                    type="text"
+                                    className="form-input-control"
+                                    placeholder="Contoh: Budi Pratama"
+                                    value={customerName}
+                                    onChange={(e) => {
+                                        setCustomerName(e.target.value);
+                                        if (e.target.value.trim()) setShowError(false);
+                                    }}
+                                    autoFocus
+                                />
+                            </div>
 
-                        {/* Input Notes / Address */}
-                        <div className="form-group-item">
-                            <label className="form-label-title" htmlFor="customer-notes-input">
-                                <span>Catatan Khusus / Alamat Pengiriman (Opsional)</span>
-                            </label>
-                            <textarea
-                                id="customer-notes-input"
-                                rows="2"
-                                className="form-textarea-control"
-                                placeholder="Contoh: Shade Natural Beige, alamat kirim ke Jakarta Barat..."
-                                value={customerNotes}
-                                onChange={(e) => setCustomerNotes(e.target.value)}
-                            />
+                            {/* Input Notes / Address */}
+                            <div className="form-group-item" style={{ marginBottom: 0 }}>
+                                <label className="form-label-title" htmlFor="customer-notes-input">
+                                    <span>Catatan / Alamat (Opsional)</span>
+                                </label>
+                                <textarea
+                                    id="customer-notes-input"
+                                    rows="2"
+                                    className="form-textarea-control"
+                                    placeholder="Contoh: Shade Natural Beige, kirim ke Jakarta Barat..."
+                                    value={customerNotes}
+                                    onChange={(e) => setCustomerNotes(e.target.value)}
+                                />
+                            </div>
                         </div>
 
                         {/* Live WhatsApp Preview */}
@@ -206,7 +210,7 @@ Mohon konfirmasi ketersediaan dan proses pemesanan saya. Terima kasih!`;
                     </div>
 
                     {/* Footer */}
-                    <div className="modal-bottom-footer">
+                    <div className="modal-bottom-footer" style={{ padding: '0.85rem 1.25rem' }}>
                         <button
                             type="button"
                             className="btn btn-secondary"
@@ -226,7 +230,8 @@ Mohon konfirmasi ketersediaan dan proses pemesanan saya. Terima kasih!`;
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

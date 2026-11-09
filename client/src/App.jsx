@@ -381,7 +381,7 @@ export function App() {
               </div>
 
               <div className="container">
-                <div className="section-heading" style={{ textAlign: 'left', marginBottom: '1rem' }}>
+                <div className="section-heading" style={{ marginBottom: '1rem' }}>
                   <h2 className="section-heading-title" style={{ fontSize: '1.6rem' }}>
                     Jelajahi <em>Katalog</em>
                   </h2>
