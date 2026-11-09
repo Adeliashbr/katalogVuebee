@@ -1600,11 +1600,17 @@ input, textarea, select {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  z-index: 120;
+  /* Padding simetris atas–bawah agar modal benar-benar di tengah layar.
+     Nilai = setengah tinggi navbar + margin, jadi modal tidak menempel
+     ke navbar maupun ke tepi bawah. */
+  padding: calc((var(--header-height) + var(--announcement-height)) / 2 + 1rem) 1rem;
+  z-index: 200;
   overflow-y: auto;
   animation: overlayFadeIn 0.22s ease both;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.modal-overlay-backdrop::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .modal-overlay-backdrop::before {
   content: '';
   position: absolute;
@@ -1618,7 +1624,8 @@ input, textarea, select {
   background-color: #FFFFFF;
   border-radius: var(--radius-xl);
   width: 100%;
-  max-height: 90vh;
+  max-height: calc(100vh - var(--header-height) - var(--announcement-height) - 2rem);
+  margin: auto;
   overflow-y: auto;
   box-shadow: 0 28px 70px -12px rgba(15, 23, 42, 0.32), 0 8px 32px -8px rgba(15,23,42,0.14);
   border: 1px solid var(--color-border);
@@ -1632,8 +1639,11 @@ input, textarea, select {
   from { opacity: 0; transform: translateY(18px) scale(0.97) }
   to { opacity: 1; transform: translateY(0) scale(1) }
 }
-.modal-luxury-window::-webkit-scrollbar { width: 6px }
-.modal-luxury-window::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px }
+.modal-luxury-window::-webkit-scrollbar { width: 0; height: 0; display: none; }
+/* Scrollbar disembunyikan di kartu modal agar menyatu dengan desain
+   (tetap bisa scroll via wheel/trackpad/touch). Berlaku untuk semua
+   modal, termasuk Konfirmasi Pesanan WhatsApp. */
+.modal-luxury-window { scrollbar-width: none; -ms-overflow-style: none; }
 
 .modal-header-bar {
   padding: 1.25rem 1.5rem;
@@ -1643,7 +1653,8 @@ input, textarea, select {
   justify-content: space-between;
   position: sticky;
   top: 0;
-  background-color: rgba(255,255,255,0.96);
+  background-color: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(8px);
   z-index: 10;
   gap: 0.75rem;
@@ -1704,13 +1715,13 @@ input, textarea, select {
 }
 @media (max-width: 560px) {
   .modal-bottom-footer .btn { flex: 1; justify-content: center; }
-  .modal-overlay-backdrop { padding: 1.25rem 0.75rem; align-items: center; justify-content: center; }
-  .modal-luxury-window { max-height: 86vh; border-radius: 20px; }
+  .modal-overlay-backdrop { padding: calc((var(--header-height) + var(--announcement-height)) / 2 + 0.75rem) 0.75rem; align-items: center; justify-content: center; }
+  .modal-luxury-window { max-height: calc(100vh - var(--header-height) - var(--announcement-height) - 1.5rem); border-radius: 20px; }
 }
 
 /* Compat: ConfirmModal lama → pakai sistem baru */
 .modal-backdrop {
-  position: fixed; inset: 0; z-index: 120;
+  position: fixed; inset: 0; z-index: 200;
   background: rgba(10,15,35,0.52);
   backdrop-filter: blur(10px) saturate(1.4);
   -webkit-backdrop-filter: blur(10px) saturate(1.4);
@@ -1744,9 +1755,14 @@ input, textarea, select {
 
 /* Order summary parts */
 .order-product-summary {
-  display: flex; gap: 1rem; align-items: center;
+  display: flex; gap: 0.85rem; align-items: center;
   background: var(--color-surface-subtle); border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1rem;
+  border-radius: var(--radius-lg); padding: 0.85rem; margin-bottom: 0.85rem;
+}
+/* Form pesanan: nama & catatan berdampingan di desktop, bertumpuk di HP */
+.order-form-grid { display: grid; grid-template-columns: 1fr; gap: 0.85rem; }
+@media (min-width: 560px) {
+  .order-form-grid { grid-template-columns: 1fr 1fr; }
 }
 .summary-img { width: 72px; height: 72px; border-radius: var(--radius-md); object-fit: cover; flex-shrink: 0; background:#FFF; }
 .summary-details { flex: 1; min-width: 0; }
@@ -1767,12 +1783,12 @@ input, textarea, select {
 .order-total-bar {
   display:flex; align-items:center; justify-content:space-between; gap:1rem;
   background: var(--color-primary); color:#FFF; border-radius: var(--radius-md);
-  padding: 0.9rem 1.1rem; margin-bottom: 1.25rem;
+  padding: 0.7rem 1rem; margin-bottom: 0.85rem;
 }
-.order-total-bar .total-amount { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--color-accent); }
-.wa-preview-box { background: #F0F7F2; border: 1px solid #BBF7D0; border-radius: var(--radius-md); padding: 0.9rem 1rem; margin-top: 0.5rem; }
-.wa-preview-header { display:flex; align-items:center; gap:0.45rem; font-size:0.72rem; font-weight:700; letter-spacing:0.08em; color:#15803D; margin-bottom:0.6rem; }
-.wa-bubble { background:#FFF; border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md); padding: 0.8rem 0.9rem; font-size: 0.82rem; white-space: pre-wrap; color: var(--color-text-main); border: 1px solid var(--color-border-subtle); line-height: 1.6; }
+.order-total-bar .total-amount { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--color-accent); }
+.wa-preview-box { background: #F0F7F2; border: 1px solid #BBF7D0; border-radius: var(--radius-md); padding: 0.75rem 0.85rem; margin-top: 0.85rem; }
+.wa-preview-header { display:flex; align-items:center; gap:0.45rem; font-size:0.72rem; font-weight:700; letter-spacing:0.08em; color:#15803D; margin-bottom:0.5rem; }
+.wa-bubble { background:#FFF; border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md); padding: 0.65rem 0.8rem; font-size: 0.8rem; white-space: pre-wrap; color: var(--color-text-main); border: 1px solid var(--color-border-subtle); line-height: 1.55; }
 
 /* 14. PRODUCT DETAIL MODAL (REQUIREMENT 3.D) */
 .product-detail-layout {
