@@ -59,8 +59,36 @@ class SqliteDatabase {
         name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
+        avatar TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    try {
+      this.db.exec("ALTER TABLE admins ADD COLUMN avatar TEXT;");
+    } catch {
+      // Column might already exist, ignore
+    }
+
+    try {
+      this.db.exec("ALTER TABLE products ADD COLUMN stock INTEGER NOT NULL DEFAULT 10;");
+    } catch {
+      // Column might already exist, ignore
+    }
+
+    // 5. Password Resets Table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id TEXT PRIMARY KEY,
+        admin_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+        email TEXT NOT NULL,
+        token_hash TEXT NOT NULL UNIQUE,
+        expires_at INTEGER NOT NULL,
+        used INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_pw_reset_token ON password_resets(token_hash);
+      CREATE INDEX IF NOT EXISTS idx_pw_reset_email ON password_resets(email);
     `);
 
     // Indexes
@@ -327,8 +355,77 @@ class SqliteDatabase {
   // --- Admin SQL Operations ---
   getAdmin() {
     return this.db
-      .prepare("SELECT id, name, email, password FROM admins LIMIT 1")
+      .prepare("SELECT id, name, email, password, avatar FROM admins LIMIT 1")
       .get();
+  }
+
+  getAdminById(id) {
+    return this.db
+      .prepare("SELECT id, name, email, password, avatar FROM admins WHERE id = ?")
+      .get(id);
+  }
+
+  getAdminByEmail(email) {
+    return this.db
+      .prepare("SELECT id, name, email, password, avatar FROM admins WHERE LOWER(email) = LOWER(?)")
+      .get(email);
+  }
+
+  updateAdminProfile(id, { name, email }) {
+    this.db
+      .prepare("UPDATE admins SET name = ?, email = ? WHERE id = ?")
+      .run(name, email, id);
+    return this.getAdminById(id);
+  }
+
+  updateAdminAvatar(id, avatar) {
+    this.db
+      .prepare("UPDATE admins SET avatar = ? WHERE id = ?")
+      .run(avatar, id);
+    return this.getAdminById(id);
+  }
+
+  updateAdminPassword(id, hashedPassword) {
+    this.db
+      .prepare("UPDATE admins SET password = ? WHERE id = ?")
+      .run(hashedPassword, id);
+    return this.getAdminById(id);
+  }
+
+  // --- Password Reset SQL Operations ---
+  createPasswordReset({ adminId, email, tokenHash, expiresAt }) {
+    const id = `reset-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    this.db
+      .prepare(
+        `INSERT INTO password_resets (id, admin_id, email, token_hash, expires_at, used)
+         VALUES (?, ?, ?, ?, ?, 0)`
+      )
+      .run(id, adminId, email.toLowerCase(), tokenHash, expiresAt);
+    return { id, adminId, email, tokenHash, expiresAt };
+  }
+
+  getValidPasswordReset(tokenHash) {
+    const now = Date.now();
+    return this.db
+      .prepare(
+        `SELECT id, admin_id AS adminId, email, token_hash AS tokenHash, expires_at AS expiresAt, used
+         FROM password_resets
+         WHERE token_hash = ? AND used = 0 AND expires_at > ?
+         LIMIT 1`
+      )
+      .get(tokenHash, now);
+  }
+
+  markPasswordResetUsed(id) {
+    this.db
+      .prepare("UPDATE password_resets SET used = 1 WHERE id = ?")
+      .run(id);
+  }
+
+  invalidateAllResetsForAdmin(adminId) {
+    this.db
+      .prepare("UPDATE password_resets SET used = 1 WHERE admin_id = ?")
+      .run(adminId);
   }
 
   // --- Category SQL Operations ---
@@ -397,6 +494,7 @@ class SqliteDatabase {
         c.name AS categoryName, 
         p.price, 
         p.stock_status AS stockStatus, 
+        p.stock,
         p.description, 
         p.image, 
         p.created_at AS createdAt,
@@ -439,6 +537,7 @@ class SqliteDatabase {
         c.name AS categoryName, 
         p.price, 
         p.stock_status AS stockStatus, 
+        p.stock,
         p.description, 
         p.image, 
         p.created_at AS createdAt,
@@ -454,7 +553,8 @@ class SqliteDatabase {
   addProduct(productData) {
     const id = `prod-${Date.now()}`;
     const price = Number(productData.price) || 0;
-    const stockStatus = productData.stockStatus || "Tersedia";
+    const stock = productData.stock !== undefined ? Math.max(0, parseInt(productData.stock, 10) || 0) : 10;
+    const stockStatus = stock > 0 ? "Tersedia" : "Habis";
     const description = productData.description || "";
     const image =
       productData.image ||
@@ -463,8 +563,8 @@ class SqliteDatabase {
     this.db
       .prepare(
         `
-      INSERT INTO products (id, name, category_id, price, stock_status, description, image)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (id, name, category_id, price, stock_status, stock, description, image)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `,
       )
       .run(
@@ -473,6 +573,7 @@ class SqliteDatabase {
         productData.categoryId,
         price,
         stockStatus,
+        stock,
         description,
         image,
       );
@@ -494,10 +595,16 @@ class SqliteDatabase {
       productData.price !== undefined
         ? Number(productData.price)
         : current.price;
+    const stock =
+      productData.stock !== undefined
+        ? Math.max(0, parseInt(productData.stock, 10) || 0)
+        : current.stock !== undefined
+        ? current.stock
+        : (current.stockStatus === "Tersedia" ? 10 : 0);
     const stockStatus =
       productData.stockStatus !== undefined
         ? productData.stockStatus
-        : current.stockStatus;
+        : (stock > 0 ? "Tersedia" : "Habis");
     const description =
       productData.description !== undefined
         ? productData.description
@@ -509,11 +616,11 @@ class SqliteDatabase {
       .prepare(
         `
       UPDATE products 
-      SET name = ?, category_id = ?, price = ?, stock_status = ?, description = ?, image = ?, updated_at = CURRENT_TIMESTAMP
+      SET name = ?, category_id = ?, price = ?, stock_status = ?, stock = ?, description = ?, image = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
       )
-      .run(name, categoryId, price, stockStatus, description, image, id);
+      .run(name, categoryId, price, stockStatus, stock, description, image, id);
 
     return this.getProductById(id);
   }
@@ -522,16 +629,47 @@ class SqliteDatabase {
     const product = this.getProductById(id);
     if (!product) return null;
 
-    const newStock = product.stockStatus === "Tersedia" ? "Habis" : "Tersedia";
+    const newStatus = product.stockStatus === "Tersedia" ? "Habis" : "Tersedia";
+    const newStock = newStatus === "Tersedia" ? (product.stock > 0 ? product.stock : 10) : 0;
     this.db
       .prepare(
         `
       UPDATE products 
-      SET stock_status = ?, updated_at = CURRENT_TIMESTAMP 
+      SET stock_status = ?, stock = ?, updated_at = CURRENT_TIMESTAMP 
       WHERE id = ?
     `,
       )
-      .run(newStock, id);
+      .run(newStatus, newStock, id);
+
+    return this.getProductById(id);
+  }
+
+  updateStockAmount(id, { action, amount, exactStock }) {
+    const product = this.getProductById(id);
+    if (!product) return null;
+
+    let newStock = product.stock || 0;
+    const num = Math.abs(parseInt(amount, 10) || 0);
+
+    if (action === "set") {
+      newStock = Math.max(0, parseInt(exactStock, 10) || 0);
+    } else if (action === "add") {
+      newStock = newStock + num;
+    } else if (action === "subtract") {
+      newStock = Math.max(0, newStock - num);
+    }
+
+    const newStatus = newStock > 0 ? "Tersedia" : "Habis";
+
+    this.db
+      .prepare(
+        `
+      UPDATE products 
+      SET stock = ?, stock_status = ?, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `,
+      )
+      .run(newStock, newStatus, id);
 
     return this.getProductById(id);
   }

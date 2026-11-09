@@ -64,7 +64,7 @@ router.get("/:id", (req, res) => {
 });
 
 router.post("/", authenticateToken, upload.single("photo"), (req, res) => {
-  const { name, categoryId, price, stockStatus, description, imageUrl } =
+  const { name, categoryId, price, stockStatus, stock, description, imageUrl } =
     req.body;
 
   if (!name || !name.trim()) {
@@ -83,6 +83,9 @@ router.post("/", authenticateToken, upload.single("photo"), (req, res) => {
       .json({ success: false, message: "harga produk harus angka positif" });
   }
 
+  const parsedStock = stock !== undefined && stock !== '' ? Math.max(0, parseInt(stock, 10) || 0) : 10;
+  const computedStatus = parsedStock > 0 ? "Tersedia" : "Habis";
+
   let finalImage = imageUrl;
   if (req.file) {
     finalImage = `/uploads/${req.file.filename}`;
@@ -92,7 +95,8 @@ router.post("/", authenticateToken, upload.single("photo"), (req, res) => {
     name: name.trim(),
     categoryId,
     price: Number(price),
-    stockStatus: stockStatus || "Tersedia",
+    stock: parsedStock,
+    stockStatus: computedStatus,
     description: description ? description.trim() : "",
     image: finalImage || "",
   });
@@ -106,7 +110,7 @@ router.post("/", authenticateToken, upload.single("photo"), (req, res) => {
 
 router.put("/:id", authenticateToken, upload.single("photo"), (req, res) => {
   const { id } = req.params;
-  const { name, categoryId, price, stockStatus, description, imageUrl } =
+  const { name, categoryId, price, stockStatus, stock, description, imageUrl } =
     req.body;
 
   const existing = db.getProductById(id);
@@ -129,7 +133,20 @@ router.put("/:id", authenticateToken, upload.single("photo"), (req, res) => {
   if (name !== undefined) updatePayload.name = name.trim();
   if (categoryId !== undefined) updatePayload.categoryId = categoryId.trim();
   if (price !== undefined) updatePayload.price = Number(price);
-  if (stockStatus !== undefined) updatePayload.stockStatus = stockStatus;
+
+  if (stock !== undefined && stock !== '') {
+    const s = Math.max(0, parseInt(stock, 10) || 0);
+    updatePayload.stock = s;
+    updatePayload.stockStatus = s > 0 ? "Tersedia" : "Habis";
+  } else if (stockStatus !== undefined) {
+    updatePayload.stockStatus = stockStatus;
+    if (stockStatus === "Habis") {
+      updatePayload.stock = 0;
+    } else if (existing.stock <= 0) {
+      updatePayload.stock = 10;
+    }
+  }
+
   if (description !== undefined) updatePayload.description = description.trim();
 
   if (req.file) {
@@ -144,6 +161,44 @@ router.put("/:id", authenticateToken, upload.single("photo"), (req, res) => {
     success: true,
     message: "produk berhasil diperbarui",
     data: updated,
+  });
+});
+
+// Endpoint untuk mengatur / menambah / mengurangi stok spesifik
+router.post("/:id/stock-adjust", authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { action, amount, exactStock } = req.body;
+
+  const existing = db.getProductById(id);
+  if (!existing) {
+    return res.status(404).json({ success: false, message: "Produk tidak ditemukan" });
+  }
+
+  if (!["add", "subtract", "set"].includes(action)) {
+    return res.status(400).json({ success: false, message: "Aksi stok tidak valid (harus add, subtract, atau set)" });
+  }
+
+  const parsedVal = Math.abs(parseInt(amount !== undefined && amount !== "" ? amount : exactStock, 10) || 0);
+
+  if (action === "subtract") {
+    if (parsedVal > (existing.stock || 0)) {
+      return res.status(400).json({
+        success: false,
+        message: `Jumlah pengurangan (${parsedVal} unit) melebihi stok yang tersedia saat ini (${existing.stock || 0} unit).`
+      });
+    }
+  }
+
+  const updated = db.updateStockAmount(id, {
+    action,
+    amount: parsedVal,
+    exactStock: exactStock !== undefined && exactStock !== "" ? parseInt(exactStock, 10) : parsedVal
+  });
+
+  return res.json({
+    success: true,
+    message: `Stok produk "${updated.name}" berhasil ${action === "add" ? `ditambah ${parsedVal} unit` : action === "subtract" ? `dikurangi ${parsedVal} unit` : "diatur"} menjadi ${updated.stock} unit (${updated.stockStatus})`,
+    data: updated
   });
 });
 
