@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { X, MessageCircle, CheckCircle2, XCircle, Sparkles, ShieldCheck, Heart, Droplets } from 'lucide-react';
+import { X, MessageCircle, CheckCircle2, XCircle, Sparkles, ShieldCheck, Heart, Droplets, PackageCheck, PackageX } from 'lucide-react';
 
 export const ProductDetailModal = ({
     product,
-    allProducts = [],
     onClose,
     onOrderProduct
 }) => {
-    const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('desc'); // 'desc' | 'usage' | 'benefits'
 
     useEffect(() => {
         if (product) {
-            setQuantity(1);
             setActiveTab('desc');
         }
     }, [product]);
@@ -30,7 +27,12 @@ export const ProductDetailModal = ({
 
     if (!product) return null;
 
-    const isAvailable = product.stockStatus === 'Tersedia';
+    // Kuantitas stok aktual dari database
+    const actualStock = product.stock !== undefined && product.stock !== null
+        ? Math.max(0, Number(product.stock))
+        : (product.stockStatus === 'Tersedia' ? 10 : 0);
+
+    const isAvailable = actualStock > 0 && product.stockStatus !== 'Habis';
 
     const formatRupiah = (num) => {
         return new Intl.NumberFormat('id-ID', {
@@ -43,40 +45,62 @@ export const ProductDetailModal = ({
     const defaultImage = 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80';
     const mainImgSrc = product.image || defaultImage;
 
-    // Related products (same category or others)
-    const relatedProducts = allProducts
-        .filter((p) => p.id !== product.id && (p.categoryId === product.categoryId || !product.categoryId))
-        .slice(0, 3);
-
     return (
-        <div className="modal-overlay-backdrop" onClick={onClose}>
+        <div
+            className="modal-overlay-backdrop product-detail-backdrop"
+            onClick={onClose}
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 150,
+                backgroundColor: 'rgba(10, 15, 35, 0.65)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '2.5rem 1rem',
+                overflowY: 'auto'
+            }}
+        >
             <div
                 className="modal-luxury-window animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
-                style={{ maxWidth: '840px' }}
+                style={{
+                    maxWidth: '820px',
+                    width: '100%',
+                    margin: 'auto',
+                    maxHeight: '84vh',
+                    borderRadius: '24px',
+                    boxShadow: '0 25px 60px -15px rgba(10, 15, 35, 0.4), 0 0 0 1px rgba(197, 168, 128, 0.25)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden'
+                }}
             >
                 {/* Header */}
-                <div className="modal-header-bar">
+                <div className="modal-header-bar" style={{ padding: '1.25rem 1.75rem', position: 'sticky', top: 0, zIndex: 10 }}>
                     <div className="modal-header-titles">
                         <span className="detail-category-badge">{product.categoryName || 'Vuebee Collection'}</span>
-                        <h2>Detail Produk</h2>
+                        <h2 style={{ fontSize: '1.4rem' }}>Detail Produk</h2>
                     </div>
                     <button
                         type="button"
                         className="modal-close-icon-btn"
                         onClick={onClose}
                         title="Tutup"
+                        aria-label="Tutup detail produk"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Body */}
-                <div className="modal-inner-body">
-                    <div className="product-detail-layout">
-                        {/* Column 1: Gallery — satu foto utama saja */}
+                <div className="modal-inner-body" style={{ padding: '1.75rem', overflowY: 'auto' }}>
+                    <div className="product-detail-layout" style={{ gap: '2rem' }}>
+                        {/* Column 1: Gallery */}
                         <div className="detail-gallery-col">
-                            <div className="detail-main-image-box">
+                            <div className="detail-main-image-box" style={{ borderRadius: '18px', overflow: 'hidden' }}>
                                 <img
                                     src={mainImgSrc}
                                     alt={product.name}
@@ -91,20 +115,20 @@ export const ProductDetailModal = ({
 
                         {/* Column 2: Info & Purchasing */}
                         <div className="detail-info-col">
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
                                 <span className={`card-stock-pill ${isAvailable ? 'available' : 'empty'}`}>
                                     {isAvailable ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                                    <span>{isAvailable ? 'Stok Tersedia' : 'Stok Habis'}</span>
+                                    <span>{isAvailable ? `Stok Tersedia: ${actualStock} Unit` : 'Stok Habis'}</span>
                                 </span>
                                 <span style={{ fontSize: '0.78rem', color: 'var(--color-sage)', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
-                                    <ShieldCheck size={14} /> BPOM & Halal Certified
+                                    <ShieldCheck size={14} /> BPOM &amp; Halal Certified
                                 </span>
                             </div>
 
-                            <h1 className="detail-product-name">{product.name}</h1>
+                            <h1 className="detail-product-name" style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>{product.name}</h1>
 
-                            <div className="detail-price-status-row">
-                                <div className="detail-price-text">
+                            <div className="detail-price-status-row" style={{ marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid var(--color-border-subtle)' }}>
+                                <div className="detail-price-text" style={{ fontSize: '1.55rem', color: 'var(--color-primary)' }}>
                                     {formatRupiah(product.price)}
                                 </div>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
@@ -113,7 +137,7 @@ export const ProductDetailModal = ({
                             </div>
 
                             {/* Structured Tabs */}
-                            <div className="detail-tabs-nav">
+                            <div className="detail-tabs-nav" style={{ marginBottom: '1rem' }}>
                                 <button
                                     type="button"
                                     className={`detail-tab-btn ${activeTab === 'desc' ? 'active' : ''}`}
@@ -137,7 +161,7 @@ export const ProductDetailModal = ({
                                 </button>
                             </div>
 
-                            <div className="detail-tab-content-box">
+                            <div className="detail-tab-content-box" style={{ minHeight: '90px', marginBottom: '1.5rem' }}>
                                 {activeTab === 'desc' && (
                                     <p>
                                         {product.description ||
@@ -174,83 +198,80 @@ export const ProductDetailModal = ({
                                 )}
                             </div>
 
-                            {/* Quantity & Order Actions */}
-                            <div className="detail-order-action-box">
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-primary)' }}>
-                                        Jumlah:
+                            {/* FITUR 1: AREA INFORMASI STOK & TOMBOL WHATSAPP (TANPA INPUT JUMLAH PEMESANAN) */}
+                            <div className="detail-order-action-box" style={{
+                                backgroundColor: 'var(--color-surface-subtle)',
+                                padding: '1.15rem',
+                                borderRadius: 'var(--radius-lg)',
+                                border: '1px solid var(--color-border)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.85rem'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-primary)' }}>
+                                        Ketersediaan Produk:
                                     </span>
-                                    <div className="detail-qty-picker">
-                                        <button
-                                            type="button"
-                                            className="qty-step-btn"
-                                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                            disabled={!isAvailable}
-                                        >
-                                            -
-                                        </button>
-                                        <span className="qty-step-val">{quantity}</span>
-                                        <button
-                                            type="button"
-                                            className="qty-step-btn"
-                                            onClick={() => setQuantity(quantity + 1)}
-                                            disabled={!isAvailable}
-                                        >
-                                            +
-                                        </button>
-                                    </div>
+                                    {isAvailable ? (
+                                        <span style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.35rem',
+                                            fontWeight: 700,
+                                            fontSize: '0.88rem',
+                                            color: 'var(--color-success)',
+                                            backgroundColor: 'var(--color-success-bg)',
+                                            padding: '0.35rem 0.75rem',
+                                            borderRadius: 'var(--radius-full)'
+                                        }}>
+                                            <PackageCheck size={16} />
+                                            <span>Stok Tersedia: {actualStock} Unit</span>
+                                        </span>
+                                    ) : (
+                                        <span style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.35rem',
+                                            fontWeight: 700,
+                                            fontSize: '0.88rem',
+                                            color: 'var(--color-danger)',
+                                            backgroundColor: 'var(--color-danger-bg)',
+                                            padding: '0.35rem 0.75rem',
+                                            borderRadius: 'var(--radius-full)'
+                                        }}>
+                                            <PackageX size={16} />
+                                            <span>Stok Habis</span>
+                                        </span>
+                                    )}
                                 </div>
 
                                 <button
                                     type="button"
                                     className="btn btn-wa"
-                                    style={{ flex: 1, padding: '0.75rem 1.25rem' }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.85rem 1.25rem',
+                                        fontSize: '0.95rem',
+                                        fontWeight: 600,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.55rem'
+                                    }}
                                     disabled={!isAvailable}
-                                    onClick={() => onOrderProduct(product, quantity)}
+                                    onClick={() => onOrderProduct(product, 1)}
                                 >
                                     <MessageCircle size={18} />
                                     <span>{isAvailable ? 'Pesan Langsung via WhatsApp' : 'Stok Habis'}</span>
                                 </button>
+                                {isAvailable && (
+                                    <p style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', textAlign: 'center', margin: 0 }}>
+                                        Jumlah pesanan dapat Anda diskusikan langsung melalui percakapan WhatsApp dengan admin kami.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
-
-                    {/* Rekomendasi Produk Terkait */}
-                    {relatedProducts.length > 0 && (
-                        <div className="detail-recommended-section">
-                            <h3 className="recommended-title">Rekomendasi Pilihan Lainnya</h3>
-                            <div className="recommended-mini-grid">
-                                {relatedProducts.map((rel) => (
-                                    <div
-                                        key={rel.id}
-                                        className="mini-rec-card"
-                                        onClick={() => {
-                                            setQuantity(1);
-                                            onOrderProduct(rel, 1, false); // opens new product detail
-                                        }}
-                                    >
-                                        <img
-                                            src={rel.image || defaultImage}
-                                            alt={rel.name}
-                                            className="mini-rec-img"
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = defaultImage;
-                                            }}
-                                        />
-                                        <div style={{ overflow: 'hidden' }}>
-                                            <div style={{ fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {rel.name}
-                                            </div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--color-accent)', fontWeight: 700 }}>
-                                                {formatRupiah(rel.price)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
@@ -258,4 +279,3 @@ export const ProductDetailModal = ({
 };
 
 export default ProductDetailModal;
-

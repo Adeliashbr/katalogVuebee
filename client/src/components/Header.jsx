@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
     ShoppingBag,
-    Lock,
+    LogIn,
     LogOut,
     LayoutDashboard,
     Store,
     Menu,
     X,
-    Sparkles
+    Sparkles,
+    UserRound
 } from 'lucide-react';
 import { VubeeLogo } from './VubeeLogo';
 
@@ -102,11 +103,68 @@ export const Header = ({
 
                     <div className="header-right-controls">
                         {adminUser ? (
-                            <div className="admin-status-bar">
-                                <span className="admin-badge" title={adminUser.name || 'Admin'}>
-                                    <span className="admin-dot"></span>
-                                    <span className="admin-name">{adminUser.name || 'Admin'}</span>
-                                </span>
+                            <div className="admin-status-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                                {/* Foto Profil Admin + Nama Admin */}
+                                <div
+                                    className="admin-profile-pill"
+                                    title={`Masuk sebagai ${adminUser.name || 'Admin'}`}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        padding: '0.25rem 0.65rem 0.25rem 0.35rem',
+                                        borderRadius: 'var(--radius-full)',
+                                        backgroundColor: 'var(--color-surface-subtle)',
+                                        border: '1px solid var(--color-border)',
+                                        cursor: 'default'
+                                    }}
+                                >
+                                    {adminUser.avatar ? (
+                                        <img
+                                            src={adminUser.avatar}
+                                            alt={adminUser.name || 'Admin'}
+                                            style={{
+                                                width: '28px',
+                                                height: '28px',
+                                                borderRadius: '50%',
+                                                objectFit: 'cover',
+                                                border: '1.5px solid var(--color-accent)'
+                                            }}
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div style={{
+                                            width: '28px',
+                                            height: '28px',
+                                            borderRadius: '50%',
+                                            backgroundColor: 'var(--color-accent)',
+                                            color: '#FFFFFF',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 700
+                                        }}>
+                                            {adminUser.name ? adminUser.name.charAt(0).toUpperCase() : <UserRound size={14} />}
+                                        </div>
+                                    )}
+                                    <span
+                                        className="admin-name hide-on-small"
+                                        style={{
+                                            fontSize: '0.82rem',
+                                            fontWeight: 600,
+                                            color: 'var(--color-primary)',
+                                            maxWidth: '120px',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        {adminUser.name || 'Administrator'}
+                                    </span>
+                                </div>
 
                                 {isAdminView ? (
                                     <button
@@ -135,6 +193,7 @@ export const Header = ({
                                     className="btn btn-danger-soft btn-sm btn-icon-only"
                                     onClick={onLogout}
                                     title="Keluar dari akun admin"
+                                    aria-label="Keluar"
                                 >
                                     <LogOut size={15} />
                                 </button>
@@ -142,13 +201,22 @@ export const Header = ({
                         ) : (
                             <button
                                 type="button"
-                                className="btn btn-secondary btn-sm"
+                                className="btn btn-primary btn-sm"
                                 onClick={onOpenLogin}
                                 id="admin-login-trigger"
-                                title="Masuk sebagai Administrator"
+                                title="Masuk ke Portal Administrator"
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.45rem',
+                                    padding: '0.45rem 1rem',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600,
+                                    borderRadius: 'var(--radius-full)'
+                                }}
                             >
-                                <Lock size={14} />
-                                <span>Login Admin</span>
+                                <LogIn size={15} />
+                                <span>Masuk</span>
                             </button>
                         )}
 
@@ -211,13 +279,54 @@ export const Header = ({
                                     <span>Tentang Kami</span>
                                 </button>
 
-                                <div style={{ marginTop: 'auto', paddingTop: '2rem' }}>
+                                <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--color-border-subtle)' }}>
                                     {adminUser ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                                            {/* Mobile Admin Profile Box */}
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.65rem',
+                                                padding: '0.65rem 0.85rem',
+                                                borderRadius: 'var(--radius-md)',
+                                                backgroundColor: 'var(--color-surface-subtle)',
+                                                border: '1px solid var(--color-border)'
+                                            }}>
+                                                {adminUser.avatar ? (
+                                                    <img
+                                                        src={adminUser.avatar}
+                                                        alt={adminUser.name || 'Admin'}
+                                                        style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                                                    />
+                                                ) : (
+                                                    <div style={{
+                                                        width: '36px',
+                                                        height: '36px',
+                                                        borderRadius: '50%',
+                                                        backgroundColor: 'var(--color-accent)',
+                                                        color: '#FFFFFF',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontWeight: 700
+                                                    }}>
+                                                        {adminUser.name ? adminUser.name.charAt(0).toUpperCase() : <UserRound size={18} />}
+                                                    </div>
+                                                )}
+                                                <div style={{ overflow: 'hidden' }}>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--color-primary)' }}>
+                                                        {adminUser.name || 'Administrator'}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                                        {adminUser.email || 'Admin Vuebee'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <button
                                                 type="button"
                                                 className="btn btn-primary"
-                                                style={{ width: '100%' }}
+                                                style={{ width: '100%', padding: '0.75rem' }}
                                                 onClick={() => {
                                                     setIsAdminView(true);
                                                     setIsMobileMenuOpen(false);
@@ -229,7 +338,7 @@ export const Header = ({
                                             <button
                                                 type="button"
                                                 className="btn btn-danger-soft"
-                                                style={{ width: '100%' }}
+                                                style={{ width: '100%', padding: '0.75rem' }}
                                                 onClick={() => {
                                                     onLogout();
                                                     setIsMobileMenuOpen(false);
@@ -242,15 +351,24 @@ export const Header = ({
                                     ) : (
                                         <button
                                             type="button"
-                                            className="btn btn-secondary"
-                                            style={{ width: '100%' }}
+                                            className="btn btn-primary"
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '0.5rem',
+                                                fontSize: '0.9rem',
+                                                fontWeight: 600
+                                            }}
                                             onClick={() => {
                                                 onOpenLogin();
                                                 setIsMobileMenuOpen(false);
                                             }}
                                         >
-                                            <Lock size={16} />
-                                            <span>Login Admin</span>
+                                            <LogIn size={16} />
+                                            <span>Masuk</span>
                                         </button>
                                     )}
                                 </div>

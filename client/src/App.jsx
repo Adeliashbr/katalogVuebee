@@ -126,6 +126,7 @@ export function App() {
         sessionStorage.setItem(ADMIN_VIEW_KEY, '1');
       } else {
         sessionStorage.removeItem(ADMIN_VIEW_KEY);
+        loadData(); // Selalu segarkan data katalog saat beralih ke tampilan toko
       }
     } catch {
       // abaikan bila storage tidak tersedia
@@ -247,6 +248,7 @@ export function App() {
           categories={categories}
           storeSettings={storeSettings}
           adminUser={adminUser}
+          onUpdateAdminUser={setAdminUser}
           onRefreshData={loadData}
           onBackToCatalog={() => setAdminView(false)}
           onLogout={handleLogout}
@@ -351,14 +353,14 @@ export function App() {
                     </p>
 
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.8rem', background: '#FFFFFF', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)', color: 'var(--color-primary)' }}>
-                        ✨ Formula Ringan
+                      <span style={{ fontSize: '0.8rem', background: '#FFFFFF', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)', color: 'var(--color-primary)', fontWeight: 500 }}>
+                        Formula Ringan
                       </span>
-                      <span style={{ fontSize: '0.8rem', background: '#FFFFFF', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)', color: 'var(--color-primary)' }}>
-                        🌿 Halal & BPOM
+                      <span style={{ fontSize: '0.8rem', background: '#FFFFFF', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)', color: 'var(--color-primary)', fontWeight: 500 }}>
+                        Halal & BPOM
                       </span>
-                      <span style={{ fontSize: '0.8rem', background: '#FFFFFF', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)', color: 'var(--color-primary)' }}>
-                        🚀 Chat WhatsApp Instan
+                      <span style={{ fontSize: '0.8rem', background: '#FFFFFF', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)', color: 'var(--color-primary)', fontWeight: 500 }}>
+                        Chat WhatsApp Instan
                       </span>
                     </div>
                   </div>
@@ -393,7 +395,7 @@ export function App() {
                     <SearchBar
                       search={search}
                       setSearch={setSearch}
-                      placeholder="Cari produk... (cth: Lip Cream, Foundation, Sunscreen)"
+                      placeholder="Cari produk skincare atau makeup..."
                     />
 
                     {/* Category Pills */}
@@ -630,9 +632,7 @@ export function App() {
           {/* DETAIL MODAL */}
           {selectedProductForDetail && (
             <ProductDetailModal
-              product={selectedProductForDetail}
-              allProducts={products}
-              storeSettings={storeSettings}
+              product={products.find((p) => p.id === selectedProductForDetail.id) || selectedProductForDetail}
               onClose={() => setSelectedProductForDetail(null)}
               onOrderProduct={(prod, qty, isOrder = true) => handleOpenOrder(prod, qty, isOrder)}
             />
@@ -743,11 +743,11 @@ export function App() {
                       <span>{storeSettings?.address || 'Jakarta Selatan, Indonesia'}</span>
                     </li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Phone size={16} style={{ color: 'var(--color-wa)' }} />
+                      <Phone size={16} style={{ flexShrink: 0, color: 'var(--color-accent)' }} />
                       <span>+{storeSettings?.phone || '6282298656732'}</span>
                     </li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <MessageCircle size={16} style={{ color: 'var(--color-wa)' }} />
+                      <MessageCircle size={16} style={{ flexShrink: 0, color: 'var(--color-accent)' }} />
                       <span>Layanan WhatsApp 09:00 - 21:00 WIB</span>
                     </li>
                   </ul>

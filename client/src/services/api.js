@@ -115,6 +115,15 @@ export const toggleProductStock = async (id) => {
     return handleResponse(res);
 };
 
+export const adjustProductStock = async (id, { action, amount, exactStock }) => {
+    const res = await fetch(`${API_BASE}/products/${id}/stock-adjust`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ action, amount, exactStock })
+    });
+    return handleResponse(res);
+};
+
 export const deleteProduct = async (id) => {
     const res = await fetch(`${API_BASE}/products/${id}`, {
         method: 'DELETE',
@@ -136,6 +145,75 @@ export const loginAdmin = async (email, password) => {
 export const fetchAdminProfile = async () => {
     const res = await fetch(`${API_BASE}/auth/me`, {
         headers: getHeaders()
+    });
+    return handleResponse(res);
+};
+
+export const updateAdminProfile = async (profileData) => {
+    const res = await fetch(`${API_BASE}/auth/profile`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(profileData)
+    });
+    return handleResponse(res);
+};
+
+export const uploadAdminAvatar = async (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const res = await fetch(`${API_BASE}/auth/avatar`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: formData
+    });
+    return handleResponse(res);
+};
+
+export const deleteAdminAvatar = async () => {
+    const res = await fetch(`${API_BASE}/auth/avatar`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+    return handleResponse(res);
+};
+
+export const updateAdminPassword = async (passwordData) => {
+    const res = await fetch(`${API_BASE}/auth/password`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(passwordData)
+    });
+    return handleResponse(res);
+};
+
+export const fetchAdminDemoInfo = async () => {
+    const res = await fetch(`${API_BASE}/auth/demo-info`);
+    return handleResponse(res);
+};
+
+export const requestPasswordReset = async (email) => {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    });
+    return handleResponse(res);
+};
+
+export const verifyResetToken = async (token) => {
+    const res = await fetch(`${API_BASE}/auth/verify-reset-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+    });
+    return handleResponse(res);
+};
+
+export const resetPasswordWithToken = async ({ token, newPassword, confirmPassword }) => {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword, confirmPassword })
     });
     return handleResponse(res);
 };

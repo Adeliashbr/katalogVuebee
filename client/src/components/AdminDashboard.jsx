@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  UserRound,
 } from "lucide-react";
 import {
   createProduct,
@@ -36,17 +37,19 @@ import {
 import { ProductFormModal } from "./ProductFormModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { VubeeLogo } from "./VubeeLogo";
+import { AdminProfileView } from "./AdminProfileView";
 
 export const AdminDashboard = ({
   products = [],
   categories = [],
   storeSettings,
   adminUser,
+  onUpdateAdminUser,
   onRefreshData,
   onBackToCatalog,
   onLogout,
 }) => {
-  const [activeTab, setActiveTab] = useState("products"); // 'products' | 'categories' | 'settings'
+  const [activeTab, setActiveTab] = useState("products"); // 'summary' | 'products' | 'categories' | 'settings' | 'profile'
 
   // Modals
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -82,6 +85,15 @@ export const AdminDashboard = ({
     address: storeSettings?.address || "Jakarta Selatan, Indonesia",
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Admin Profile state for sidebar hint & sync
+  const [currentAdmin, setCurrentAdmin] = useState(adminUser);
+
+  useEffect(() => {
+    if (adminUser) {
+      setCurrentAdmin(adminUser);
+    }
+  }, [adminUser]);
 
   // Filters
   const [adminSearch, setAdminSearch] = useState("");
@@ -297,6 +309,7 @@ export const AdminDashboard = ({
     products: "Manajemen Produk",
     categories: "Manajemen Kategori",
     settings: "Pengaturan Toko",
+    profile: "Profil Admin",
   };
 
   // Ringkasan keseluruhan dari data asli (hitung client-side, tanpa klaim palsu).
@@ -406,13 +419,23 @@ export const AdminDashboard = ({
             <Settings size={18} />
             <span>Pengaturan Toko</span>
           </button>
+
+          <button
+            type="button"
+            className={`admin-nav-item ${activeTab === "profile" ? "active" : ""}`}
+            onClick={() => selectTab("profile")}
+            title="Profil Admin"
+          >
+            <UserRound size={18} />
+            <span>Profil Admin</span>
+          </button>
         </nav>
 
         <div className="admin-sidebar-footer">
           <span className="admin-nav-label">Akun</span>
           <div className="admin-user-hint">
             Masuk sebagai{" "}
-            <strong>{adminUser?.name || adminUser?.email || "admin"}</strong>
+            <strong>{currentAdmin?.name || currentAdmin?.email || "admin"}</strong>
           </div>
 
           <button
@@ -444,11 +467,12 @@ export const AdminDashboard = ({
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             <button
               type="button"
-              className="admin-mobile-menu-btn"
+              className="btn btn-secondary btn-sm"
               onClick={() => setIsMobileSidebarOpen(true)}
-              aria-label="Buka menu"
+              aria-label="Buka navigasi menu admin"
+              style={{ padding: "0.35rem 0.65rem", fontSize: "0.82rem", fontWeight: 600 }}
             >
-              <Menu size={18} />
+              Menu
             </button>
             <VubeeLogo height={26} variant="dark" />
             <span
@@ -463,7 +487,48 @@ export const AdminDashboard = ({
             </span>
           </div>
 
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <div
+              className="admin-profile-pill"
+              onClick={() => setActiveTab("profile")}
+              title="Profil Admin"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                cursor: "pointer"
+              }}
+            >
+              {(currentAdmin?.avatar || adminUser?.avatar) ? (
+                <img
+                  src={currentAdmin?.avatar || adminUser?.avatar}
+                  alt="Admin"
+                  style={{
+                    width: "26px",
+                    height: "26px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "1px solid var(--color-accent)"
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "26px",
+                    height: "26px",
+                    borderRadius: "50%",
+                    backgroundColor: "var(--color-accent-light)",
+                    color: "var(--color-accent-hover)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.75rem",
+                    fontWeight: 700
+                  }}
+                >
+                  {(currentAdmin?.name || adminUser?.name || "A").charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
@@ -487,31 +552,92 @@ export const AdminDashboard = ({
         <div className="admin-page-header">
           <div className="admin-page-header-text">
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              <button
-                type="button"
-                className="admin-header-toggle"
-                onClick={() => setIsDesktopCollapsed((v) => !v)}
-                aria-label={isDesktopCollapsed ? "Tampilkan sidebar" : "Sembunyikan sidebar"}
-                title={isDesktopCollapsed ? "Tampilkan menu" : "Sembunyikan menu"}
-              >
-                <Menu size={16} />
-              </button>
               <span className="admin-breadcrumb">
                 Dashboard / {tabTitles[activeTab]}
               </span>
             </div>
             <h1>{tabTitles[activeTab]}</h1>
           </div>
-          {activeTab === "products" && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleOpenAddProduct}
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {activeTab === "products" && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleOpenAddProduct}
+              >
+                <Plus size={16} />
+                <span>Tambah Produk</span>
+              </button>
+            )}
+
+            {/* Admin Profile Pill in Dashboard Header (Top Right) */}
+            <div
+              className="admin-profile-pill"
+              onClick={() => setActiveTab("profile")}
+              title={`Masuk sebagai ${currentAdmin?.name || adminUser?.name || "Admin"} - Klik untuk lihat Profil`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.55rem",
+                padding: "0.25rem 0.75rem 0.25rem 0.35rem",
+                borderRadius: "var(--radius-full)",
+                backgroundColor: "var(--color-surface-subtle)",
+                border: "1px solid var(--color-border)",
+                cursor: "pointer",
+                boxShadow: "var(--shadow-subtle)",
+                transition: "all 0.2s ease"
+              }}
             >
-              <Plus size={16} />
-              <span>Tambah Produk</span>
-            </button>
-          )}
+              {(currentAdmin?.avatar || adminUser?.avatar) ? (
+                <img
+                  src={currentAdmin?.avatar || adminUser?.avatar}
+                  alt={currentAdmin?.name || adminUser?.name || "Admin"}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "1px solid var(--color-accent)"
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "26px",
+                    height: "26px",
+                    borderRadius: "50%",
+                    backgroundColor: "var(--color-accent-light)",
+                    color: "var(--color-accent-hover)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.8rem",
+                    fontWeight: 700
+                  }}
+                >
+                  {(currentAdmin?.name || adminUser?.name || "A").charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span
+                className="admin-name hide-on-small"
+                style={{
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  color: "var(--color-primary)",
+                  maxWidth: "140px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                {currentAdmin?.name || adminUser?.name || "Administrator"}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Mobile Navigation Tabs */}
@@ -547,6 +673,14 @@ export const AdminDashboard = ({
           >
             <Settings size={14} />
             <span>Pengaturan</span>
+          </button>
+          <button
+            type="button"
+            className={`category-pill-btn ${activeTab === "profile" ? "active" : ""}`}
+            onClick={() => setActiveTab("profile")}
+          >
+            <UserRound size={14} />
+            <span>Profil Admin</span>
           </button>
         </div>
 
@@ -893,6 +1027,7 @@ export const AdminDashboard = ({
                     <tr>
                       <th className="col-product">Produk</th>
                       <th className="col-category">Kategori</th>
+                      <th className="col-stock-qty">Stok</th>
                       <th className="col-price">Harga</th>
                       <th className="col-stock">Status Stok</th>
                       <th className="col-actions">Aksi</th>
@@ -901,7 +1036,7 @@ export const AdminDashboard = ({
                   <tbody>
                     {filteredProducts.length === 0 ? (
                       <tr>
-                        <td colSpan="5" style={{ textAlign: "center", padding: "3.5rem 1rem", color: "var(--color-text-muted)" }}>
+                        <td colSpan="6" style={{ textAlign: "center", padding: "3.5rem 1rem", color: "var(--color-text-muted)" }}>
                           <div className="empty-icon-circle" style={{ margin: "0 auto 1rem" }}><Search size={26} /></div>
                           <p style={{ fontWeight: 700, color: "var(--color-primary)", marginBottom: "0.35rem" }}>Tidak ada produk ditemukan</p>
                           <p style={{ fontSize: "0.85rem", marginBottom: "1rem" }}>Coba ubah kata kunci atau reset filter kategori.</p>
@@ -940,6 +1075,28 @@ export const AdminDashboard = ({
                           <td className="col-category">
                             <span className="cat-pill">
                               {p.categoryName || "Tanpa kategori"}
+                            </span>
+                          </td>
+                          <td className="col-stock-qty">
+                            <span
+                              className={`badge ${
+                                (p.stock || 0) > 10
+                                  ? "badge-success"
+                                  : (p.stock || 0) > 0
+                                  ? "badge-warning"
+                                  : "badge-danger"
+                              }`}
+                              style={{
+                                padding: "0.35rem 0.65rem",
+                                borderRadius: "999px",
+                                fontWeight: 700,
+                                fontSize: "0.78rem",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
+                            >
+                              {p.stock !== undefined ? p.stock : (p.stockStatus === "Tersedia" ? 10 : 0)} unit
                             </span>
                           </td>
                           <td className="col-price">
@@ -1290,6 +1447,18 @@ export const AdminDashboard = ({
             </div>
           </div>
         )}
+
+        {/* TAB 4: PROFILE ADMIN */}
+        {activeTab === "profile" && (
+          <AdminProfileView
+            adminUser={currentAdmin || adminUser}
+            onUpdateAdminUser={(updatedUser) => {
+              setCurrentAdmin(updatedUser);
+              onUpdateAdminUser?.(updatedUser);
+            }}
+            showFeedback={showFeedback}
+          />
+        )}
       </main>
 
       {/* Product Modal */}
@@ -1297,6 +1466,7 @@ export const AdminDashboard = ({
         isOpen={isProductModalOpen}
         onClose={() => setIsProductModalOpen(false)}
         onSave={handleSaveProduct}
+        onRefreshData={onRefreshData}
         editingProduct={editingProduct}
         categories={categories}
       />
