@@ -15,6 +15,7 @@ import {
   FileText,
   AlertTriangle,
   PackageCheck,
+  PackageMinus,
   PackageX,
   Wallet,
   ArrowRight,
@@ -29,6 +30,7 @@ import {
   updateProduct,
   deleteProduct,
   toggleProductStock,
+  adjustProductStock,
   createCategory,
   updateCategory,
   deleteCategory,
@@ -36,6 +38,7 @@ import {
 } from "../services/api";
 import { ProductFormModal } from "./ProductFormModal";
 import { ConfirmModal } from "./ConfirmModal";
+import { StockAdjustModal } from "./StockAdjustModal";
 import { VubeeLogo } from "./VubeeLogo";
 import { AdminProfileView } from "./AdminProfileView";
 
@@ -54,6 +57,7 @@ export const AdminDashboard = ({
   // Modals
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [stockAdjustProduct, setStockAdjustProduct] = useState(null);
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -175,6 +179,20 @@ export const AdminDashboard = ({
     } catch (err) {
       showFeedback("error", err.message || "Gagal mengubah status stok");
     }
+  };
+
+  // Catat penjualan: kurangi stok lewat endpoint stock-adjust.
+  // Dipanggil dari StockAdjustModal; error dilempar agar modal menampilkannya.
+  const handleConfirmStockAdjust = async (amount) => {
+    const res = await adjustProductStock(stockAdjustProduct.id, {
+      action: "subtract",
+      amount,
+    });
+    showFeedback(
+      "success",
+      res?.message || `Stok "${stockAdjustProduct.name}" berhasil dikurangi ${amount} unit`,
+    );
+    onRefreshData();
   };
 
   const handleDeleteProduct = (product) => {
@@ -464,30 +482,20 @@ export const AdminDashboard = ({
       <main className="admin-main-stage">
         {/* Mobile Top Bar */}
         <div className="admin-mobile-topbar">
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", minWidth: 0 }}>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
               onClick={() => setIsMobileSidebarOpen(true)}
               aria-label="Buka navigasi menu admin"
-              style={{ padding: "0.35rem 0.65rem", fontSize: "0.82rem", fontWeight: 600 }}
+              style={{ padding: "0.35rem 0.65rem", fontSize: "0.82rem", fontWeight: 600, flexShrink: 0 }}
             >
               Menu
             </button>
-            <VubeeLogo height={26} variant="dark" />
-            <span
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 700,
-                fontSize: "1.1rem",
-              }}
-            >
-              {" "}
-              Admin
-            </span>
+            <VubeeLogo height={26} variant="light" />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
             <div
               className="admin-profile-pill"
               onClick={() => setActiveTab("profile")}
@@ -535,7 +543,7 @@ export const AdminDashboard = ({
               onClick={onBackToCatalog}
             >
               <Store size={14} />
-              <span>Katalog</span>
+              <span className="hide-on-small">Katalog</span>
             </button>
             <button
               type="button"
@@ -1135,6 +1143,16 @@ export const AdminDashboard = ({
                               </button>
                               <button
                                 type="button"
+                                className="btn btn-secondary btn-sm row-btn"
+                                onClick={() => setStockAdjustProduct(p)}
+                                title="Catat terjual (kurangi stok)"
+                                aria-label={`Catat terjual ${p.name}`}
+                              >
+                                <PackageMinus size={14} />
+                                <span>Terjual</span>
+                              </button>
+                              <button
+                                type="button"
                                 className="btn btn-danger-soft btn-sm row-btn"
                                 onClick={() => handleDeleteProduct(p)}
                                 title="Hapus Produk"
@@ -1469,6 +1487,13 @@ export const AdminDashboard = ({
         onRefreshData={onRefreshData}
         editingProduct={editingProduct}
         categories={categories}
+      />
+
+      {/* Stock Adjust Modal */}
+      <StockAdjustModal
+        product={stockAdjustProduct}
+        onClose={() => setStockAdjustProduct(null)}
+        onConfirm={handleConfirmStockAdjust}
       />
 
       {/* Confirm Modal */}
